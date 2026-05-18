@@ -12,11 +12,10 @@ export const fmtFull = (d) =>
 
 // ── CONSTANTS ────────────────────────────────────────────────────────────────
 export const STATUS = {
-  new:        { label: "Новый",        cls: "s-new" },
-  confirmed:  { label: "Подтверждён",  cls: "s-confirmed" },
-  cooking:    { label: "Готовится",    cls: "s-cooking" },
-  delivered:  { label: "Доставлен",    cls: "s-delivered" },
-  cancelled:  { label: "Отменён",      cls: "s-cancelled" },
+  new:        { label: "Новый",      cls: "s-new" },
+  cooking:    { label: "Готов",      cls: "s-cooking" },
+  delivered:  { label: "Доставлен", cls: "s-delivered" },
+  cancelled:  { label: "Отменён",   cls: "s-cancelled" },
 };
 
 export const SOURCE_LABEL = {
