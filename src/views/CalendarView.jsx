@@ -368,7 +368,7 @@ function OrderModal({ order, defaultDate, data, onClose, onSaved }) {
         <button
           className="btn btn-ghost btn-sm"
           style={{ marginTop: 4 }}
-          onClick={() => setItems([...items, { menu_item_id: data.menu[0]?.id, qty: 1 }])}
+         onClick={() => setItems([...items, { menu_item_id: data.menu[0]?.id, qty: 0.5 }])}
         >＋ Добавить</button>
       </div>
 
