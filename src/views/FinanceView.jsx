@@ -17,17 +17,21 @@ export default function FinanceView({ data, refresh }) {
   const hBorrowed = husbandBorrowed(data);
   const hRepaid = husbandRepaid(data);
 
-  function getRange() {
-    const now = new Date();
-    if (period === "today") return { from: todayStr(), to: todayStr() };
-    if (period === "week") { const d = new Date(); d.setDate(d.getDate() - 6); return { from: d.toISOString().slice(0, 10), to: todayStr() }; }
-    if (period === "month") {
-  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  return { from: now.toISOString().slice(0, 8) + "01", to: `${now.toISOString().slice(0, 8)}${lastDay}` };
-}
-    if (period === "custom") return { from: fromDate || "2000-01-01", to: toDate || todayStr() };
-    return { from: "2000-01-01", to: "2099-12-31" };
+function getRange() {
+  const now = new Date();
+  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const monthEnd = `${now.toISOString().slice(0, 8)}${lastDayOfMonth}`;
+
+  if (period === "today") return { from: todayStr(), to: todayStr() };
+  if (period === "week") {
+    const start = new Date(); start.setDate(start.getDate() - 6);
+    const end = new Date(); end.setDate(end.getDate() + 6); // неделя вперёд тоже
+    return { from: start.toISOString().slice(0, 10), to: end.toISOString().slice(0, 10) };
   }
+  if (period === "month") return { from: now.toISOString().slice(0, 8) + "01", to: monthEnd };
+  if (period === "custom") return { from: fromDate || "2000-01-01", to: toDate || todayStr() };
+  return { from: "2000-01-01", to: "2099-12-31" };
+}
 
   const { from, to } = getRange();
   const ordersInPeriod = data.orders.filter(o => o.delivery_date >= from && o.delivery_date <= to && o.status !== "cancelled");
