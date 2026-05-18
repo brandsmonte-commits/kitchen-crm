@@ -43,8 +43,8 @@ export default function App() {
             Не заданы Supabase-ключи. Создайте файл <code>.env</code>:
           </p>
           <div className="code-block">
-            <code>VITE_SUPABASE_URL=https://xxx.supabase.co</code>
-            <code>VITE_SUPABASE_ANON_KEY=eyJhbGc...</code>
+            <code>VITE_SUPABASE_URL=https://datpbgwrlhbtwjmodlyd.supabase.co</code>
+            <code>VITE_SUPABASE_ANON_KEY=sb_publishable_Gp0luY4nE-jQnCVA7q1_ZA_pnk75bxa</code>
           </div>
           <p style={{ color: "var(--text2)", fontSize: 13 }}>
             Затем выполните <code>supabase/schema.sql</code> в SQL Editor.
