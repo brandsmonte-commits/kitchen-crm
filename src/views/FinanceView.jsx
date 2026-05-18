@@ -24,10 +24,15 @@ function getRange() {
 
   if (period === "today") return { from: todayStr(), to: todayStr() };
   if (period === "week") {
-    const start = new Date(); start.setDate(start.getDate() - 6);
-    const end = new Date(); end.setDate(end.getDate() + 6); // неделя вперёд тоже
-    return { from: start.toISOString().slice(0, 10), to: end.toISOString().slice(0, 10) };
-  }
+  const day = now.getDay(); // 0=вс, 1=пн...
+  const diffToMon = (day === 0 ? -6 : 1 - day);
+  const mon = new Date(now); mon.setDate(now.getDate() + diffToMon);
+  const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+  return {
+    from: mon.toISOString().slice(0, 10),
+    to: sun.toISOString().slice(0, 10)
+  };
+}
   if (period === "month") return { from: now.toISOString().slice(0, 8) + "01", to: monthEnd };
   if (period === "custom") return { from: fromDate || "2000-01-01", to: toDate || todayStr() };
   return { from: "2000-01-01", to: "2099-12-31" };
