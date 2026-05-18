@@ -353,13 +353,21 @@ function OrderModal({ order, defaultDate, data, onClose, onSaved }) {
             >
               {data.menu.map((m) => <option key={m.id} value={m.id}>{m.name} — {cur(m.price)}</option>)}
             </select>
-            <input
-              type="number"
-              className="qty"
-              min="1"
-              value={it.qty}
-              onChange={(e) => setItems(items.map((i, ii) => ii === idx ? { ...i, qty: Number(e.target.value) } : i))}
-            />
+           <input
+  type="text"
+  inputMode="decimal"
+  className="qty"
+  placeholder="1"
+  value={it.qty}
+  onChange={(e) => {
+    const raw = e.target.value.replace(",", ".");
+    setItems(items.map((i, ii) => ii === idx ? { ...i, qty: raw } : i));
+  }}
+  onBlur={(e) => {
+    const val = parseFloat(String(e.target.value).replace(",", ".")) || 0.5;
+    setItems(items.map((i, ii) => ii === idx ? { ...i, qty: val } : i));
+  }}
+/>
             <button className="icon-btn danger" onClick={() => setItems(items.filter((_, ii) => ii !== idx))}>
               <CloseIcon />
             </button>
