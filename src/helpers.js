@@ -19,7 +19,14 @@ export const STATUS = {
   cancelled:  { label: "Отменён",      cls: "s-cancelled" },
 };
 
-export const SOURCE_LABEL = { cash: "💵 Нал", card: "💳 Карта", husband: "🤝 Кредит" };
+export const SOURCE_LABEL = {
+  madina:  "💵 Мадина",
+  moldir:  "💵 Молдир",
+  card:    "💳 Карта",
+  husband: "🤝 Кредит",
+  // обратная совместимость со старыми записями
+  cash:    "💵 Нал",
+};
 
 // ── ORDER MATH ───────────────────────────────────────────────────────────────
 export function orderSubtotal(o, menu) {
@@ -59,23 +66,18 @@ export function paymentState(o, menu, payments) {
 }
 
 // ── ACCOUNT BALANCES ─────────────────────────────────────────────────────────
-export function cashBalance(d) {
+export function accountBalance(data, account) {
   let b = 0;
-  d.payments.filter((p) => p.method === "cash").forEach((p) => (b += Number(p.amount)));
-  d.purchases.filter((p) => p.type === "buy" && p.source === "cash").forEach((p) => (b -= Number(p.total_price)));
-  d.withdrawals.filter((w) => w.source === "cash").forEach((w) => (b -= Number(w.amount)));
-  d.repayments.filter((r) => r.source === "cash").forEach((r) => (b -= Number(r.amount)));
+  data.payments.filter((p) => p.method === account).forEach((p) => (b += Number(p.amount)));
+  data.purchases.filter((p) => p.type === "buy" && p.source === account).forEach((p) => (b -= Number(p.total_price)));
+  data.withdrawals.filter((w) => w.source === account).forEach((w) => (b -= Number(w.amount)));
+  data.repayments.filter((r) => r.source === account).forEach((r) => (b -= Number(r.amount)));
   return b;
 }
 
-export function cardBalance(d) {
-  let b = 0;
-  d.payments.filter((p) => p.method === "card").forEach((p) => (b += Number(p.amount)));
-  d.purchases.filter((p) => p.type === "buy" && p.source === "card").forEach((p) => (b -= Number(p.total_price)));
-  d.withdrawals.filter((w) => w.source === "card").forEach((w) => (b -= Number(w.amount)));
-  d.repayments.filter((r) => r.source === "card").forEach((r) => (b -= Number(r.amount)));
-  return b;
-}
+// Обратная совместимость — cash = madina + moldir вместе
+export const cashBalance = (d) => accountBalance(d, "madina") + accountBalance(d, "moldir");
+export const cardBalance = (d) => accountBalance(d, "card");
 
 export function husbandDebt(d) {
   const borrowed = d.purchases
