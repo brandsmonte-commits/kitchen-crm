@@ -144,8 +144,10 @@ function OrderCard({ order, data, onTransfer, onEdit, onDelete, onStatusChange, 
   const ps = paymentState(order, data.menu, data.payments);
 
   const orderPays = data.payments.filter((p) => p.order_id === order.id);
-  const cashSum = orderPays.filter((p) => p.method === "cash").reduce((s, p) => s + Number(p.amount), 0);
+  const madinaSum = orderPays.filter((p) => p.method === "madina" || p.method === "cash").reduce((s, p) => s + Number(p.amount), 0);
+  const moldirSum = orderPays.filter((p) => p.method === "moldir").reduce((s, p) => s + Number(p.amount), 0);
   const cardSum = orderPays.filter((p) => p.method === "card").reduce((s, p) => s + Number(p.amount), 0);
+  const cashSum = madinaSum; // обратная совместимость
 
   return (
     <div className={`order-card ${ps}`}>
@@ -202,8 +204,10 @@ function OrderCard({ order, data, onTransfer, onEdit, onDelete, onStatusChange, 
               </div>
               {orderPays.length > 0 && (
                 <div className="payment-meta">
-                  {cashSum > 0 && `💵 ${cur(cashSum)}`}
-                  {cashSum > 0 && cardSum > 0 && " · "}
+                  {madinaSum > 0 && `💵Мадина: ${cur(madinaSum)}`}
+                  {madinaSum > 0 && moldirSum > 0 && " · "}
+                  {moldirSum > 0 && `💵Молдир: ${cur(moldirSum)}`}
+                  {(madinaSum > 0 || moldirSum > 0) && cardSum > 0 && " · "}
                   {cardSum > 0 && `💳 ${cur(cardSum)}`}
                 </div>
               )}
@@ -401,7 +405,7 @@ function PaymentModal({ order, data, onClose, onSaved }) {
   const cl = data.clients.find((c) => c.id === order.client_id);
 
   const [amount, setAmount] = useState(debt);
-  const [method, setMethod] = useState("cash");
+  const [method, setMethod] = useState("madina");
   const [saving, setSaving] = useState(false);
 
   const payHistory = data.payments.filter((p) => p.order_id === order.id);
@@ -441,13 +445,12 @@ function PaymentModal({ order, data, onClose, onSaved }) {
 
       <div className="fg">
         <label>Куда зачислить</label>
-        <div className="pay-method-grid">
-          <button className={`pay-method-btn ${method === "cash" ? "active" : ""}`} onClick={() => setMethod("cash")}>
-            <span style={{ fontSize: 24 }}>💵</span>Наличные
-          </button>
-          <button className={`pay-method-btn ${method === "card" ? "active" : ""}`} onClick={() => setMethod("card")}>
-            <span style={{ fontSize: 24 }}>💳</span>Карта
-          </button>
+        <div className="pay-method-grid three">
+          {[["madina","💵","Мадина"],["moldir","💵","Молдир"],["card","💳","Карта"]].map(([s,ico,lbl]) => (
+            <button key={s} className={`pay-method-btn ${method === s ? "active" : ""}`} onClick={() => setMethod(s)}>
+              <span style={{fontSize:20}}>{ico}</span>{lbl}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -458,3 +461,4 @@ function PaymentModal({ order, data, onClose, onSaved }) {
     </Modal>
   );
 }
+

@@ -75,7 +75,7 @@ function PurchaseModal({ onClose, onSaved }) {
   const [qty, setQty] = useState("");
   const [unit, setUnit] = useState("кг");
   const [price, setPrice] = useState("");
-  const [source, setSource] = useState("cash");
+  const [source, setSource] = useState("madina");
   const [date, setDate] = useState(todayStr());
   const [saving, setSaving] = useState(false);
 
@@ -120,14 +120,13 @@ function PurchaseModal({ onClose, onSaved }) {
           <div className="fg">
             <label>Откуда оплачено</label>
             <div className="pay-method-grid three">
-              {["cash", "card", "husband"].map((s) => (
+              {[["madina","💵","Мадина"],["moldir","💵","Молдир"],["card","💳","Карта"],["husband","🤝","Кредит"]].map(([s,ico,lbl]) => (
                 <button
                   key={s}
                   className={`pay-method-btn ${s === "husband" ? "husband" : ""} ${source === s ? "active" : ""}`}
                   onClick={() => setSource(s)}
                 >
-                  <span style={{ fontSize: 24 }}>{s === "cash" ? "💵" : s === "card" ? "💳" : "🤝"}</span>
-                  {s === "cash" ? "Наличные" : s === "card" ? "Карта" : "Кредит мужа"}
+                  <span style={{ fontSize: 20 }}>{ico}</span>{lbl}
                 </button>
               ))}
             </div>

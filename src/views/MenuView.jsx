@@ -27,14 +27,11 @@ export default function MenuView({ data, refresh }) {
           {data.menu
             .filter((m) => (m.category || "Другое") === cat)
             .map((m) => {
-              const margin = m.cost ? Math.round(((m.price - m.cost) / m.price) * 100) : null;
               return (
                 <div key={m.id} className="menu-card">
                   <div>
                     <div className="menu-name">{m.name}</div>
                     <div className="menu-meta">
-                      {m.unit} {m.cost ? `· Себест: ${cur(m.cost)}` : ""}
-                      {margin !== null && ` · Наценка ${margin}%`}
                     </div>
                   </div>
                   <div style={{ textAlign: "right" }}>
@@ -62,7 +59,6 @@ export default function MenuView({ data, refresh }) {
 function MenuModal({ item, onClose, onSaved }) {
   const [name, setName] = useState(item?.name || "");
   const [price, setPrice] = useState(item?.price || "");
-  const [cost, setCost] = useState(item?.cost || "");
   const [category, setCategory] = useState(item?.category || "");
   const [unit, setUnit] = useState(item?.unit || "шт");
   const [saving, setSaving] = useState(false);
@@ -74,7 +70,7 @@ function MenuModal({ item, onClose, onSaved }) {
       id: item?.id,
       name,
       price: Number(price),
-      cost: cost ? Number(cost) : null,
+      cost: null,
       category: category || "Другое",
       unit,
     });
@@ -87,7 +83,6 @@ function MenuModal({ item, onClose, onSaved }) {
       <div className="fg"><label>Название *</label><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Манты..." /></div>
       <div className="form-row">
         <div className="fg"><label>Цена (QAR) *</label><input type="number" value={price} onChange={(e) => setPrice(e.target.value)} /></div>
-        <div className="fg"><label>Себестоимость</label><input type="number" value={cost} onChange={(e) => setCost(e.target.value)} /></div>
       </div>
       <div className="form-row">
         <div className="fg"><label>Категория</label><input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Горячее" /></div>
