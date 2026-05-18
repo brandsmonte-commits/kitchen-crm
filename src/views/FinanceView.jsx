@@ -21,7 +21,10 @@ export default function FinanceView({ data, refresh }) {
     const now = new Date();
     if (period === "today") return { from: todayStr(), to: todayStr() };
     if (period === "week") { const d = new Date(); d.setDate(d.getDate() - 6); return { from: d.toISOString().slice(0, 10), to: todayStr() }; }
-    if (period === "month") return { from: now.toISOString().slice(0, 8) + "01", to: todayStr() };
+    if (period === "month") {
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  return { from: now.toISOString().slice(0, 8) + "01", to: `${now.toISOString().slice(0, 8)}${lastDay}` };
+}
     if (period === "custom") return { from: fromDate || "2000-01-01", to: toDate || todayStr() };
     return { from: "2000-01-01", to: "2099-12-31" };
   }
