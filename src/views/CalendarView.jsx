@@ -308,7 +308,8 @@ function OrderModal({ order, defaultDate, data, onClose, onSaved }) {
             <input
               type="number"
               className="qty"
-              min="1"
+              min="0.5"
+              step="0.5"
               value={it.qty}
               onChange={(e) => setItems(items.map((i, ii) => ii === idx ? { ...i, qty: Number(e.target.value) } : i))}
             />
