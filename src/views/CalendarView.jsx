@@ -76,10 +76,10 @@ export default function CalendarView({ data, refresh }) {
             >
               <span className="cal-day">{new Date(date + "T12:00").getDate()}</span>
               {orders.length > 0 && (
-                <div className="cal-dots">
-                  {orders.slice(0, 3).map((o) => <span key={o.id} className={`cal-dot ${o.status}`} />)}
-                </div>
-              )}
+  <div className="cal-dots">
+    {orders.map((o) => <span key={o.id} className={`cal-dot ${o.status}`} />)}
+  </div>
+)}
             </div>
           );
         })}
