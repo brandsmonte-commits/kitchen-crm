@@ -5,6 +5,7 @@ import {
   orderSubtotal, orderDiscount, orderTotal, orderPaymentsTotal, orderDebt, paymentState,
 } from "../helpers";
 import * as db from "../db";
+import { supabase } from "../db";
 
 export default function CalendarView({ data, refresh }) {
   const [calDate, setCalDate] = useState(new Date());
@@ -12,6 +13,7 @@ export default function CalendarView({ data, refresh }) {
   const [orderModal, setOrderModal] = useState(null); // null | {} | order
   const [transferOrder, setTransferOrder] = useState(null);
   const [paymentOrder, setPaymentOrder] = useState(null);
+  const [editPayment, setEditPayment] = useState(null); // payment object to edit
 
   const y = calDate.getFullYear();
   const m = calDate.getMonth();
@@ -85,6 +87,34 @@ export default function CalendarView({ data, refresh }) {
 
       <div className="day-orders">
         <div className="day-title">{fmtFull(selectedDate)}</div>
+        {dayOrders.length > 0 && (() => {
+          // Aggregate items across all orders of the day
+          const agg = {};
+          dayOrders.forEach(o => {
+            if (o.status === "cancelled") return;
+            (o.items || []).forEach(i => {
+              const m = data.menu.find(mi => mi.id === i.menu_item_id);
+              if (!m) return;
+              const key = m.id;
+              if (!agg[key]) agg[key] = { name: m.name, unit: m.unit, qty: 0 };
+              agg[key].qty += Number(i.qty);
+            });
+          });
+          const entries = Object.values(agg);
+          if (!entries.length) return null;
+          return (
+            <div style={{ background: "var(--surface)", borderRadius: "var(--radius)", padding: "12px 14px", marginBottom: 12, border: "1.5px solid var(--border)", boxShadow: "var(--shadow)" }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text2)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>📋 Объём на день</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {entries.map(e => (
+                  <span key={e.name} style={{ background: "var(--accent-light)", color: "var(--accent)", borderRadius: 20, padding: "4px 10px", fontSize: 13, fontWeight: 700 }}>
+                    {e.name} × {e.qty % 1 === 0 ? e.qty : e.qty.toFixed(1)}{e.unit && e.unit !== "шт" ? ` ${e.unit}` : ""}
+                  </span>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
         {dayOrders.length === 0 ? (
           <p className="empty-msg">Нет заказов на этот день</p>
         ) : (
@@ -98,6 +128,7 @@ export default function CalendarView({ data, refresh }) {
               onDelete={() => handleDelete(o.id)}
               onStatusChange={(s) => handleStatusChange(o.id, s)}
               onAddPayment={() => setPaymentOrder(o)}
+              onEditPayment={(p) => setEditPayment(p)}
             />
           ))
         )}
@@ -128,12 +159,19 @@ export default function CalendarView({ data, refresh }) {
           onSaved={() => { setPaymentOrder(null); refresh(); }}
         />
       )}
+      {editPayment && (
+        <EditPaymentModal
+          payment={editPayment}
+          onClose={() => setEditPayment(null)}
+          onSaved={() => { setEditPayment(null); refresh(); }}
+        />
+      )}
     </div>
   );
 }
 
 // ─── ORDER CARD ─────────────────────────────────────────────────────────────
-function OrderCard({ order, data, onTransfer, onEdit, onDelete, onStatusChange, onAddPayment }) {
+function OrderCard({ order, data, onTransfer, onEdit, onDelete, onStatusChange, onAddPayment, onEditPayment }) {
   const cl = data.clients.find((c) => c.id === order.client_id);
   const sub = orderSubtotal(order, data.menu);
   const total = orderTotal(order, data.menu);
@@ -176,7 +214,10 @@ function OrderCard({ order, data, onTransfer, onEdit, onDelete, onStatusChange, 
       <div className="order-chips">
         {order.items?.map((i) => {
           const m = data.menu.find((mi) => mi.id === i.menu_item_id);
-          return m && <span key={i.id} className="chip">{m.name} ×{i.qty}</span>;
+          if (!m) return null;
+          const qtyDisplay = Number(i.qty) % 1 === 0 ? Number(i.qty) : Number(i.qty).toFixed(1);
+          const unitDisplay = m.unit && m.unit !== "шт" ? ` ${m.unit}` : "";
+          return <span key={i.id} className="chip">{m.name} ×{qtyDisplay}{unitDisplay}</span>;
         })}
       </div>
 
@@ -203,12 +244,19 @@ function OrderCard({ order, data, onTransfer, onEdit, onDelete, onStatusChange, 
                 {debt > 0 ? <span style={{ marginLeft: 8 }} className="payment-debt">· Долг: {cur(debt)}</span> : " ✓"}
               </div>
               {orderPays.length > 0 && (
-                <div className="payment-meta">
-                  {madinaSum > 0 && `💵Мадина: ${cur(madinaSum)}`}
-                  {madinaSum > 0 && moldirSum > 0 && " · "}
-                  {moldirSum > 0 && `💵Молдир: ${cur(moldirSum)}`}
-                  {(madinaSum > 0 || moldirSum > 0) && cardSum > 0 && " · "}
-                  {cardSum > 0 && `💳 ${cur(cardSum)}`}
+                <div style={{ marginTop: 4 }}>
+                  {orderPays.map(p => {
+                    const ico = p.method === "card" ? "💳" : "💵";
+                    const lbl = p.method === "madina" || p.method === "cash" ? "Мадина" : p.method === "moldir" ? "Молдир" : "Карта";
+                    return (
+                      <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--text2)", marginTop: 2 }}>
+                        <span>{ico} {lbl}: {cur(p.amount)}</span>
+                        <button className="icon-btn" style={{ padding: 2 }} onClick={() => onEditPayment(p)} title="Редактировать">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -308,8 +356,7 @@ function OrderModal({ order, defaultDate, data, onClose, onSaved }) {
             <input
               type="number"
               className="qty"
-              min="0.5"
-              step="0.5"
+              min="1"
               value={it.qty}
               onChange={(e) => setItems(items.map((i, ii) => ii === idx ? { ...i, qty: Number(e.target.value) } : i))}
             />
@@ -463,3 +510,52 @@ function PaymentModal({ order, data, onClose, onSaved }) {
   );
 }
 
+// ─── EDIT PAYMENT MODAL ─────────────────────────────────────────────────────
+function EditPaymentModal({ payment, onClose, onSaved }) {
+  const [amount, setAmount] = useState(payment.amount);
+  const [method, setMethod] = useState(payment.method === "cash" ? "madina" : payment.method);
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    if (!Number(amount)) return alert("Введите сумму");
+    setSaving(true);
+    await supabase.from("payments").update({
+      amount: Number(amount),
+      method,
+    }).eq("id", payment.id);
+    setSaving(false);
+    onSaved();
+  }
+
+  async function del() {
+    if (!confirm("Удалить этот платёж?")) return;
+    setSaving(true);
+    await supabase.from("payments").delete().eq("id", payment.id);
+    setSaving(false);
+    onSaved();
+  }
+
+  return (
+    <Modal title="Редактировать оплату" onClose={onClose}>
+      <div className="fg">
+        <label>Сумма (QAR)</label>
+        <input type="number" value={amount} onChange={e => setAmount(e.target.value)} />
+      </div>
+      <div className="fg">
+        <label>Метод оплаты</label>
+        <div className="pay-method-grid three">
+          {[["madina","💵","Мадина"],["moldir","💵","Молдир"],["card","💳","Карта"]].map(([s,ico,lbl]) => (
+            <button key={s} className={`pay-method-btn ${method === s ? "active" : ""}`} onClick={() => setMethod(s)}>
+              <span style={{fontSize:20}}>{ico}</span>{lbl}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="modal-acts">
+        <button className="btn" style={{background:"var(--red)",flex:"0 0 auto",padding:"10px 14px"}} onClick={del} disabled={saving}>🗑</button>
+        <button className="btn btn-ghost" onClick={onClose}>Отмена</button>
+        <button className="btn" onClick={save} disabled={saving}>{saving ? "..." : "✓ Сохранить"}</button>
+      </div>
+    </Modal>
+  );
+}
