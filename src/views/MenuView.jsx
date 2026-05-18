@@ -31,8 +31,8 @@ export default function MenuView({ data, refresh }) {
                 <div key={m.id} className="menu-card">
                   <div>
                     <div className="menu-name">{m.name}</div>
-                    <div className="menu-meta">
-                    </div>
+                   <div className="menu-meta">{m.unit}
+                   </div>
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <div className="menu-price">{cur(m.price)}</div>
