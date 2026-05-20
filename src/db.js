@@ -1,15 +1,18 @@
 import { createClient } from "@supabase/supabase-js";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(SUPABASE_URL || "https://placeholder.supabase.co", SUPABASE_KEY || "placeholder");
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  console.error("⚠️ Supabase credentials missing. Check .env file.");
+}
 
-// Работает с любым форматом ключа (eyJ... или sb_publishable_...)
+export const supabase = createClient(SUPABASE_URL || "", SUPABASE_KEY || "");
 export const isConfigured = Boolean(SUPABASE_URL && SUPABASE_KEY);
 
+// ── DATA LAYER ───────────────────────────────────────────────────────────────
 export async function loadAll() {
-  const [clients, menu, orders, orderItems, payments, purchases, withdrawals, repayments] =
+  const [clients, menu, orders, orderItems, payments, purchases, withdrawals, repayments, ingredients] =
     await Promise.all([
       supabase.from("clients").select("*").order("name"),
       supabase.from("menu_items").select("*").order("category, name"),
@@ -19,8 +22,10 @@ export async function loadAll() {
       supabase.from("purchases").select("*").order("purchased_at", { ascending: false }),
       supabase.from("withdrawals").select("*").order("withdrawn_at", { ascending: false }),
       supabase.from("repayments").select("*").order("repaid_at", { ascending: false }),
+      supabase.from("ingredients").select("*").order("name"),
     ]);
 
+  // join order_items into orders
   const ordersWithItems = (orders.data || []).map((o) => ({
     ...o,
     items: (orderItems.data || []).filter((i) => i.order_id === o.id),
@@ -34,21 +39,25 @@ export async function loadAll() {
     purchases: purchases.data || [],
     withdrawals: withdrawals.data || [],
     repayments: repayments.data || [],
+    ingredients: ingredients.data || [],
   };
 }
 
+// ── CLIENTS ──
 export const upsertClient = (c) =>
   c.id
     ? supabase.from("clients").update({ name: c.name, phone: c.phone, note: c.note }).eq("id", c.id)
     : supabase.from("clients").insert({ name: c.name, phone: c.phone, note: c.note });
 export const deleteClient = (id) => supabase.from("clients").delete().eq("id", id);
 
+// ── MENU ──
 export const upsertMenu = (m) => {
   const data = { name: m.name, price: m.price, cost: m.cost, category: m.category, unit: m.unit };
   return m.id ? supabase.from("menu_items").update(data).eq("id", m.id) : supabase.from("menu_items").insert(data);
 };
 export const deleteMenu = (id) => supabase.from("menu_items").delete().eq("id", id);
 
+// ── ORDERS ──
 export async function upsertOrder(o) {
   const data = {
     client_id: o.client_id,
@@ -59,6 +68,7 @@ export async function upsertOrder(o) {
     disc_value: o.disc_value,
     note: o.note,
   };
+
   let orderId = o.id;
   if (orderId) {
     await supabase.from("orders").update(data).eq("id", orderId);
@@ -69,9 +79,9 @@ export async function upsertOrder(o) {
     orderId = inserted.id;
   }
   if (o.items?.length) {
-    await supabase.from("order_items").insert(
-      o.items.map((i) => ({ order_id: orderId, menu_item_id: i.menu_item_id, qty: i.qty }))
-    );
+    await supabase
+      .from("order_items")
+      .insert(o.items.map((i) => ({ order_id: orderId, menu_item_id: i.menu_item_id, qty: i.qty })));
   }
   return orderId;
 }
@@ -80,30 +90,45 @@ export const transferOrder = (id, delivery_date, delivery_time) =>
   supabase.from("orders").update({ delivery_date, delivery_time }).eq("id", id);
 export const deleteOrder = (id) => supabase.from("orders").delete().eq("id", id);
 
+// ── PAYMENTS ──
 export const addPayment = (p) =>
   supabase.from("payments").insert({
-    order_id: p.order_id, amount: p.amount, method: p.method,
+    order_id: p.order_id,
+    amount: p.amount,
+    method: p.method,
     paid_at: p.paid_at || new Date().toISOString().slice(0, 10),
   });
+export const deletePayment = (id) => supabase.from("payments").delete().eq("id", id);
 
+// ── PURCHASES ──
 export const addPurchase = (p) =>
   supabase.from("purchases").insert({
-    type: p.type, ingredient: p.ingredient, qty: p.qty, unit: p.unit,
-    total_price: p.total_price || 0, source: p.source || null,
+    type: p.type,
+    ingredient: p.ingredient,
+    qty: p.qty,
+    unit: p.unit,
+    total_price: p.total_price || 0,
+    source: p.source || null,
     purchased_at: p.purchased_at || new Date().toISOString().slice(0, 10),
   });
 export const deletePurchase = (id) => supabase.from("purchases").delete().eq("id", id);
 
+// ── WITHDRAWALS ──
 export const addWithdrawal = (w) =>
   supabase.from("withdrawals").insert({
-    amount: w.amount, source: w.source, note: w.note,
+    amount: w.amount,
+    source: w.source,
+    note: w.note,
     withdrawn_at: w.withdrawn_at || new Date().toISOString().slice(0, 10),
   });
 export const deleteWithdrawal = (id) => supabase.from("withdrawals").delete().eq("id", id);
 
+// ── REPAYMENTS ──
 export const addRepayment = (r) =>
   supabase.from("repayments").insert({
-    amount: r.amount, source: r.source, note: r.note,
+    amount: r.amount,
+    source: r.source,
+    note: r.note,
     repaid_at: r.repaid_at || new Date().toISOString().slice(0, 10),
   });
 export const deleteRepayment = (id) => supabase.from("repayments").delete().eq("id", id);
