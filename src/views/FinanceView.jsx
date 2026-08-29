@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Modal, { TrashIcon } from "../components/Modal";
 import {
-  cur, fmt, todayStr, SOURCE_LABEL, accountBalance, orderTotal, orderDebt,
+  cur, fmt, todayStr, SOURCE_LABEL, accountBalance, accountIncome, orderTotal, orderDebt,
   creditorDebt, creditorBorrowed, creditorRepaid,
 } from "../helpers";
 import * as db from "../db";
@@ -12,6 +12,7 @@ export default function FinanceView({ data, refresh }) {
   const [toDate, setToDate] = useState("");
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [repayCreditor, setRepayCreditor] = useState(null); // null | "husband" | "azamat"
+  const [showIncome, setShowIncome] = useState(null); // null | "madina" | "moldir" | "card"
 
   const madina = accountBalance(data, "madina") + accountBalance(data, "cash"); // cash = old madina
   const moldir = accountBalance(data, "moldir");
@@ -87,17 +88,17 @@ function getRange() {
 
       <div className="cat-label" style={{ marginTop: 0 }}>💼 Счета</div>
       <div className="balances-3">
-        <div className="balance-card madina">
+        <div className="balance-card madina" onClick={() => setShowIncome("madina")} style={{ cursor: "pointer" }}>
           <div className="balance-icon">💵</div>
           <div className="balance-label">Мадина</div>
           <div className="balance-value green">{cur(madina)}</div>
         </div>
-        <div className="balance-card moldir">
+        <div className="balance-card moldir" onClick={() => setShowIncome("moldir")} style={{ cursor: "pointer" }}>
           <div className="balance-icon">💵</div>
           <div className="balance-label">Молдир</div>
           <div className="balance-value green">{cur(moldir)}</div>
         </div>
-        <div className="balance-card card-acc">
+        <div className="balance-card card-acc" onClick={() => setShowIncome("card")} style={{ cursor: "pointer" }}>
           <div className="balance-icon">💳</div>
           <div className="balance-label">Карта</div>
           <div className="balance-value blue">{cur(card)}</div>
@@ -221,6 +222,14 @@ function getRange() {
       ))}
 
       {showWithdraw && <WithdrawModal madina={madina} moldir={moldir} card={card} onClose={() => setShowWithdraw(false)} onSaved={() => { setShowWithdraw(false); refresh(); }} />}
+      {showIncome && (
+        <IncomeModal
+          account={showIncome}
+          label={showIncome === "madina" ? "Мадина" : showIncome === "moldir" ? "Молдир" : "Карта"}
+          entries={accountIncome(data, showIncome)}
+          onClose={() => setShowIncome(null)}
+        />
+      )}
       {repayCreditor && (
         <RepayModal
           creditor={repayCreditor}
@@ -232,6 +241,34 @@ function getRange() {
         />
       )}
     </div>
+  );
+}
+
+function IncomeModal({ account, label, entries, onClose }) {
+  const total = entries.reduce((s, e) => s + e.amount, 0);
+
+  return (
+    <Modal title={`${label} — поступления`} onClose={onClose}>
+      <div style={{ background: "var(--surface2)", borderRadius: 12, padding: 12, marginBottom: 14, fontWeight: 700 }}>
+        Всего оплат клиентов: <strong>{cur(total)}</strong>
+        <div style={{ fontWeight: 600, fontSize: 12, color: "var(--text2)", marginTop: 4 }}>
+          Без учёта выводов и закупок — только поступления от клиентов
+        </div>
+      </div>
+      {entries.length === 0 && <p className="empty-msg">Поступлений нет</p>}
+      {entries.map((e) => (
+        <div key={e.id} className="withdraw-row">
+          <div>
+            <strong>{e.clientName}</strong>
+            <span style={{ color: "var(--text2)" }}> · {cur(e.amount)}</span>
+          </div>
+          <span className="pr-date">{fmt(e.orderDate)}</span>
+        </div>
+      ))}
+      <div className="modal-acts">
+        <button className="btn btn-ghost" onClick={onClose}>Закрыть</button>
+      </div>
+    </Modal>
   );
 }
 

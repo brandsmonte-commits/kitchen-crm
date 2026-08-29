@@ -79,6 +79,25 @@ export function accountBalance(data, account) {
 export const cashBalance = (d) => accountBalance(d, "madina") + accountBalance(d, "moldir");
 export const cardBalance = (d) => accountBalance(d, "card");
 
+// Поступления на счёт (кто заплатил, сколько, за какой заказ) — без выводов и закупок,
+// только оплаты клиентов, для показа "откуда деньги" по клику на баланс счёта.
+export function accountIncome(data, account) {
+  const methods = account === "madina" ? ["madina", "cash"] : [account];
+  return data.payments
+    .filter((p) => methods.includes(p.method))
+    .map((p) => {
+      const order = data.orders.find((o) => o.id === p.order_id);
+      const client = order ? data.clients.find((c) => c.id === order.client_id) : null;
+      return {
+        id: p.id,
+        amount: Number(p.amount),
+        clientName: client?.name || "—",
+        orderDate: order?.delivery_date || p.paid_at,
+      };
+    })
+    .sort((a, b) => (b.orderDate || "").localeCompare(a.orderDate || ""));
+}
+
 // ── КРЕДИТЫ (ДОЛГИ) ──────────────────────────────────────────────────────────
 // creditor: "husband" (= Асхат, старое имя поля сохранено для совместимости
 // со старыми записями в purchases.source) | "azamat" (Азамат).
