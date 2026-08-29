@@ -305,6 +305,11 @@ function OrderModal({ order, defaultDate, data, onClose, onSaved }) {
     if (items.length === 0) return alert("Добавьте товары");
     setSaving(true);
     try {
+      const itemsWithPrice = items.map((i) => ({
+        menu_item_id: i.menu_item_id,
+        qty: i.qty,
+        price: data.menu.find((m) => m.id === i.menu_item_id)?.price ?? 0,
+      }));
       await db.upsertOrder({
         id: order?.id,
         client_id: clientId,
@@ -314,7 +319,7 @@ function OrderModal({ order, defaultDate, data, onClose, onSaved }) {
         note,
         disc_type: discType,
         disc_value: Number(discValue) || 0,
-        items,
+        items: itemsWithPrice,
       });
       onSaved();
     } catch (e) {

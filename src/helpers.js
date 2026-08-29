@@ -31,8 +31,10 @@ export const SOURCE_LABEL = {
 // ── ORDER MATH ───────────────────────────────────────────────────────────────
 export function orderSubtotal(o, menu) {
   return (o.items || []).reduce((s, i) => {
-    const m = menu.find((mi) => mi.id === i.menu_item_id);
-    return s + (m ? m.price * i.qty : 0);
+    // цена фиксируется на момент заказа (i.price); у старых записей без снимка —
+    // берём текущую цену меню, чтобы ничего не сломать до миграции/бэкафилла
+    const price = i.price != null ? Number(i.price) : menu.find((mi) => mi.id === i.menu_item_id)?.price || 0;
+    return s + price * i.qty;
   }, 0);
 }
 

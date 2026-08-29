@@ -81,7 +81,7 @@ export async function upsertOrder(o) {
   if (o.items?.length) {
     await supabase
       .from("order_items")
-      .insert(o.items.map((i) => ({ order_id: orderId, menu_item_id: i.menu_item_id, qty: i.qty })));
+      .insert(o.items.map((i) => ({ order_id: orderId, menu_item_id: i.menu_item_id, qty: i.qty, price: i.price })));
   }
   return orderId;
 }

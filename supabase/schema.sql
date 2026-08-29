@@ -43,7 +43,9 @@ create table if not exists order_items (
   id uuid primary key default gen_random_uuid(),
   order_id uuid references orders(id) on delete cascade,
   menu_item_id uuid references menu_items(id) on delete set null,
-  qty integer not null default 1
+  qty integer not null default 1,
+  price numeric                                -- цена товара на момент заказа (снимок);
+                                                -- NULL у старых записей = берём текущую цену меню
 );
 
 -- Payments (оплаты клиентов, отдельные записи)
