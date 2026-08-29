@@ -164,8 +164,8 @@ body{font-family:var(--font);color:var(--text);-webkit-font-smoothing:antialiase
 .balance-card.card-acc{background:linear-gradient(135deg,#dbeafe,#bfdbfe)}
 .balance-card.husband{background:linear-gradient(135deg,#fce7f3,#fbcfe8);margin-bottom:0}
 .balance-card.azamat{background:linear-gradient(135deg,#f3e8ff,#e9d5ff);margin-bottom:0}
-.credit-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:stretch}
-.credit-grid .balance-card{padding:12px;min-width:0}
+.credit-grid{display:flex;flex-direction:row;flex-wrap:nowrap;gap:8px;align-items:stretch}
+.credit-grid .balance-card{flex:1 1 0%;padding:12px;min-width:0}
 .credit-grid .balance-value{font-size:19px;overflow-wrap:break-word}
 .credit-grid .balance-sub{font-size:10.5px;line-height:1.4}
 .pr-source.azamat{background:var(--purple-bg);color:var(--purple)}

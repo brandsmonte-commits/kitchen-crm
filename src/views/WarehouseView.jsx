@@ -109,7 +109,7 @@ export default function WarehouseView({ data, refresh }) {
       {data.purchases.map(p => {
         const ing = ingredients.find(i => i.id === p.ingredient);
         const ingName = ing ? ing.name : p.ingredient;
-        const srcLabel = { madina: "💵М", moldir: "💵Мол", card: "💳", husband: "🤝Ас", azamat: "🤝Аз", cash: "💵" }[p.source] || "";
+        const srcLabel = { madina: "💵 Мадина", moldir: "💵 Молдир", card: "💳 Карта", husband: "🤝 Асхат", azamat: "🤝 Азамат", cash: "💵 Нал" }[p.source] || "";
         return (
           <div key={p.id} className={`purchase-row ${p.type}`}>
             <div style={{ minWidth: 0 }}>
