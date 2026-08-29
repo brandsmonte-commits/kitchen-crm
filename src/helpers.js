@@ -98,6 +98,22 @@ export function accountIncome(data, account) {
     .sort((a, b) => (b.orderDate || "").localeCompare(a.orderDate || ""));
 }
 
+// Из каких оплат клиентов состоит текущий остаток счёта: выведенные/потраченные деньги
+// списываются со старых поступлений в первую очередь (FIFO), поэтому остаток — это всегда
+// самые свежие поступления. balance — текущий остаток счёта (см. accountBalance).
+export function accountRemainingIncome(data, account, balance) {
+  const entries = accountIncome(data, account); // от новых к старым
+  if (balance <= 0) return [];
+  const out = [];
+  let sum = 0;
+  for (const e of entries) {
+    if (sum >= balance) break;
+    out.push(e);
+    sum += e.amount;
+  }
+  return out;
+}
+
 // ── КРЕДИТЫ (ДОЛГИ) ──────────────────────────────────────────────────────────
 // creditor: "husband" (= Асхат, старое имя поля сохранено для совместимости
 // со старыми записями в purchases.source) | "azamat" (Азамат).

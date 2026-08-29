@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Modal, { TrashIcon } from "../components/Modal";
 import {
-  cur, fmt, todayStr, SOURCE_LABEL, accountBalance, accountIncome, orderTotal, orderDebt,
+  cur, fmt, todayStr, SOURCE_LABEL, accountBalance, accountRemainingIncome, orderTotal, orderDebt,
   creditorDebt, creditorBorrowed, creditorRepaid,
 } from "../helpers";
 import * as db from "../db";
@@ -226,7 +226,8 @@ function getRange() {
         <IncomeModal
           account={showIncome}
           label={showIncome === "madina" ? "Мадина" : showIncome === "moldir" ? "Молдир" : "Карта"}
-          entries={accountIncome(data, showIncome)}
+          balance={{ madina, moldir, card }[showIncome]}
+          entries={accountRemainingIncome(data, showIncome, { madina, moldir, card }[showIncome])}
           onClose={() => setShowIncome(null)}
         />
       )}
@@ -244,15 +245,14 @@ function getRange() {
   );
 }
 
-function IncomeModal({ account, label, entries, onClose }) {
-  const total = entries.reduce((s, e) => s + e.amount, 0);
-
+function IncomeModal({ account, label, balance, entries, onClose }) {
   return (
-    <Modal title={`${label} — поступления`} onClose={onClose}>
+    <Modal title={`${label} — из чего остаток`} onClose={onClose}>
       <div style={{ background: "var(--surface2)", borderRadius: 12, padding: 12, marginBottom: 14, fontWeight: 700 }}>
-        Всего оплат клиентов: <strong>{cur(total)}</strong>
+        Текущий остаток: <strong>{cur(balance)}</strong>
         <div style={{ fontWeight: 600, fontSize: 12, color: "var(--text2)", marginTop: 4 }}>
-          Без учёта выводов и закупок — только поступления от клиентов
+          Показаны только самые свежие оплаты клиентов, из которых он состоит — уже выведенные
+          и потраченные деньги (со старых оплат) в список не входят
         </div>
       </div>
       {entries.length === 0 && <p className="empty-msg">Поступлений нет</p>}
