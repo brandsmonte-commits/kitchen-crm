@@ -22,7 +22,8 @@ export const SOURCE_LABEL = {
   madina:  "💵 Мадина",
   moldir:  "💵 Молдир",
   card:    "💳 Карта",
-  husband: "🤝 Кредит",
+  husband: "🤝 Асхат",
+  azamat:  "🤝 Азамат",
   // обратная совместимость со старыми записями
   cash:    "💵 Нал",
 };
@@ -78,15 +79,27 @@ export function accountBalance(data, account) {
 export const cashBalance = (d) => accountBalance(d, "madina") + accountBalance(d, "moldir");
 export const cardBalance = (d) => accountBalance(d, "card");
 
-export function husbandDebt(d) {
-  const borrowed = d.purchases
-    .filter((p) => p.type === "buy" && p.source === "husband")
+// ── КРЕДИТЫ (ДОЛГИ) ──────────────────────────────────────────────────────────
+// creditor: "husband" (= Асхат, старое имя поля сохранено для совместимости
+// со старыми записями в purchases.source) | "azamat" (Азамат).
+// repayments.creditor указывает, к какому из кредиторов относится погашение.
+export function creditorBorrowed(d, creditor) {
+  return d.purchases
+    .filter((p) => p.type === "buy" && p.source === creditor)
     .reduce((s, p) => s + Number(p.total_price), 0);
-  const repaid = d.repayments.reduce((s, r) => s + Number(r.amount), 0);
-  return Math.max(0, borrowed - repaid);
 }
 
-export const husbandBorrowed = (d) =>
-  d.purchases.filter((p) => p.type === "buy" && p.source === "husband").reduce((s, p) => s + Number(p.total_price), 0);
+export function creditorRepaid(d, creditor) {
+  return d.repayments
+    .filter((r) => (r.creditor || "husband") === creditor) // старые записи без поля = Асхат
+    .reduce((s, r) => s + Number(r.amount), 0);
+}
 
-export const husbandRepaid = (d) => d.repayments.reduce((s, r) => s + Number(r.amount), 0);
+export function creditorDebt(d, creditor) {
+  return Math.max(0, creditorBorrowed(d, creditor) - creditorRepaid(d, creditor));
+}
+
+// Обратная совместимость (Асхат = старое поле "husband")
+export const husbandDebt = (d) => creditorDebt(d, "husband");
+export const husbandBorrowed = (d) => creditorBorrowed(d, "husband");
+export const husbandRepaid = (d) => creditorRepaid(d, "husband");

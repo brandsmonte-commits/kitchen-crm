@@ -7,7 +7,8 @@ const SOURCE_OPTIONS = [
   ["madina", "💵", "Мадина"],
   ["moldir", "💵", "Молдир"],
   ["card", "💳", "Карта"],
-  ["husband", "🤝", "Кредит"],
+  ["husband", "🤝", "Асхат"],
+  ["azamat", "🤝", "Азамат"],
 ];
 
 export default function WarehouseView({ data, refresh }) {
@@ -108,7 +109,7 @@ export default function WarehouseView({ data, refresh }) {
       {data.purchases.map(p => {
         const ing = ingredients.find(i => i.id === p.ingredient);
         const ingName = ing ? ing.name : p.ingredient;
-        const srcLabel = { madina: "💵М", moldir: "💵Мол", card: "💳", husband: "🤝", cash: "💵" }[p.source] || "";
+        const srcLabel = { madina: "💵М", moldir: "💵Мол", card: "💳", husband: "🤝Ас", azamat: "🤝Аз", cash: "💵" }[p.source] || "";
         return (
           <div key={p.id} className={`purchase-row ${p.type}`}>
             <div style={{ minWidth: 0 }}>
@@ -217,7 +218,11 @@ function PurchaseModal({ ingredients, onClose, onSaved }) {
             <label>Откуда оплачено</label>
             <div className="pay-method-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
               {SOURCE_OPTIONS.map(([s, ico, lbl]) => (
-                <button key={s} className={`pay-method-btn ${s === "husband" ? "husband" : ""} ${source === s ? "active" : ""}`} onClick={() => setSource(s)}>
+                <button
+                  key={s}
+                  className={`pay-method-btn ${s === "husband" ? "husband" : ""} ${s === "azamat" ? "azamat" : ""} ${source === s ? "active" : ""}`}
+                  onClick={() => setSource(s)}
+                >
                   <span style={{ fontSize: 18 }}>{ico}</span>{lbl}
                 </button>
               ))}

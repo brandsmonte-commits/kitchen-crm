@@ -139,6 +139,7 @@ body{font-family:var(--font);color:var(--text);-webkit-font-smoothing:antialiase
 .pr-source.cash{background:var(--green-bg);color:var(--green)}
 .pr-source.card{background:var(--blue-bg);color:var(--blue)}
 .pr-source.husband{background:var(--pink-bg);color:var(--pink)}
+.pr-source.azamat{background:var(--purple-bg);color:var(--purple)}
 
 /* FINANCE */
 .period-row{display:flex;gap:5px;margin-bottom:10px;background:var(--surface);border-radius:10px;padding:4px}
@@ -153,7 +154,8 @@ body{font-family:var(--font);color:var(--text);-webkit-font-smoothing:antialiase
 .balance-card{border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);position:relative}
 .balance-card.cash{background:linear-gradient(135deg,#dcfce7 0%,#bbf7d0 100%)}
 .balance-card.card{background:linear-gradient(135deg,#dbeafe 0%,#bfdbfe 100%)}
-.balance-card.husband{background:linear-gradient(135deg,#fce7f3 0%,#fbcfe8 100%);grid-column:span 2}
+.balance-card.husband{background:linear-gradient(135deg,#fce7f3 0%,#fbcfe8 100%)}
+.balance-card.azamat{background:linear-gradient(135deg,#f3e8ff 0%,#e9d5ff 100%)}
 .balance-icon{font-size:22px;margin-bottom:6px}
 .balance-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--text2)}
 .balance-value{font-size:22px;font-weight:900;margin:4px 0 2px}
@@ -162,6 +164,9 @@ body{font-family:var(--font);color:var(--text);-webkit-font-smoothing:antialiase
 .balance-value.pink{color:var(--pink)}
 .balance-sub{font-size:11px;color:var(--text2);font-weight:600}
 .balance-action{position:absolute;top:12px;right:12px}
+
+/* Кредиты — Асхат / Азамат в два столбца */
+.credit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
 
 .fin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
 .fin-card{border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
@@ -219,6 +224,7 @@ body{font-family:var(--font);color:var(--text);-webkit-font-smoothing:antialiase
 .pay-method-btn .emoji{font-size:24px}
 .pay-method-btn.active{border-color:var(--accent);background:var(--accent-light);color:var(--accent)}
 .pay-method-btn.husband.active{border-color:var(--pink);background:var(--pink-bg);color:var(--pink)}
+.pay-method-btn.azamat.active{border-color:var(--purple);background:var(--purple-bg);color:var(--purple)}
 
 .pay-bar-wrap{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin:6px 0}
 .pay-bar{height:100%;border-radius:3px;background:var(--green);transition:width .3s}
@@ -234,4 +240,3 @@ a{color:inherit}
 
 .app { display: flex !important; flex-direction: column !important; }
 .content { flex: 1 !important; overflow-y: auto !important; padding-bottom: 80px !important; display: block !important; }
-

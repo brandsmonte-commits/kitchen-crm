@@ -124,10 +124,12 @@ export const addWithdrawal = (w) =>
 export const deleteWithdrawal = (id) => supabase.from("withdrawals").delete().eq("id", id);
 
 // ── REPAYMENTS ──
+// creditor: "husband" (Асхат) | "azamat" (Азамат) — к кому относится погашение
 export const addRepayment = (r) =>
   supabase.from("repayments").insert({
     amount: r.amount,
     source: r.source,
+    creditor: r.creditor || "husband",
     note: r.note,
     repaid_at: r.repaid_at || new Date().toISOString().slice(0, 10),
   });

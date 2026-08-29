@@ -1,6 +1,9 @@
 import { useState } from "react";
 import Modal, { TrashIcon } from "../components/Modal";
-import { cur, fmt, todayStr, SOURCE_LABEL, accountBalance, orderTotal, orderDebt, husbandDebt, husbandBorrowed, husbandRepaid } from "../helpers";
+import {
+  cur, fmt, todayStr, SOURCE_LABEL, accountBalance, orderTotal, orderDebt,
+  creditorDebt, creditorBorrowed, creditorRepaid,
+} from "../helpers";
 import * as db from "../db";
 
 export default function FinanceView({ data, refresh }) {
@@ -8,14 +11,20 @@ export default function FinanceView({ data, refresh }) {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [showWithdraw, setShowWithdraw] = useState(false);
-  const [showRepay, setShowRepay] = useState(false);
+  const [repayCreditor, setRepayCreditor] = useState(null); // null | "husband" | "azamat"
 
   const madina = accountBalance(data, "madina") + accountBalance(data, "cash"); // cash = old madina
   const moldir = accountBalance(data, "moldir");
   const card = accountBalance(data, "card");
-  const hDebt = husbandDebt(data);
-  const hBorrowed = husbandBorrowed(data);
-  const hRepaid = husbandRepaid(data);
+
+  // "husband" — старое имя поля в БД, отображается как "Асхат"
+  const askhatDebt = creditorDebt(data, "husband");
+  const askhatBorrowed = creditorBorrowed(data, "husband");
+  const askhatRepaid = creditorRepaid(data, "husband");
+
+  const azamatDebt = creditorDebt(data, "azamat");
+  const azamatBorrowed = creditorBorrowed(data, "azamat");
+  const azamatRepaid = creditorRepaid(data, "azamat");
 
 function getRange() {
   const now = new Date();
@@ -57,8 +66,10 @@ function getRange() {
   const profit = paidTotal - purchTotal;
 
   const credits = [
-    ...data.purchases.filter(p => p.type === "buy" && p.source === "husband").map(p => ({ ...p, _t: "borrow" })),
-    ...data.repayments.map(r => ({ ...r, _t: "repay" })),
+    ...data.purchases
+      .filter(p => p.type === "buy" && (p.source === "husband" || p.source === "azamat"))
+      .map(p => ({ ...p, _t: "borrow" })),
+    ...data.repayments.map(r => ({ ...r, _t: "repay", creditor: r.creditor || "husband" })),
   ].sort((a, b) => (a.purchased_at || a.repaid_at || "").localeCompare(b.purchased_at || b.repaid_at || ""));
 
   const clientDebts = data.orders.filter(o => orderDebt(o, data.menu, data.payments) > 0 && o.status !== "cancelled");
@@ -93,17 +104,25 @@ function getRange() {
         </div>
       </div>
 
-      <div className="balance-card husband" style={{ marginBottom: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div>
-            <div className="balance-icon">🤝</div>
-            <div className="balance-label">Кредит мужа (долг)</div>
-            <div className="balance-value pink">{cur(hDebt)}</div>
-            <div className="balance-sub">Взято: {cur(hBorrowed)} · Возвращено: {cur(hRepaid)}</div>
-          </div>
-          {hDebt > 0
-            ? <button className="btn btn-sm" style={{ background: "var(--pink)" }} onClick={() => setShowRepay(true)}>Погасить</button>
-            : <span style={{ color: "var(--green)", fontWeight: 800, fontSize: 13 }}>✓ Погашен</span>}
+      <div className="cat-label">🤝 Кредиты</div>
+      <div className="credit-grid" style={{ marginBottom: 16 }}>
+        <div className="balance-card husband">
+          <div className="balance-icon">🤝</div>
+          <div className="balance-label">Кредит Асхат</div>
+          <div className="balance-value pink">{cur(askhatDebt)}</div>
+          <div className="balance-sub">Взято: {cur(askhatBorrowed)} · Возвращено: {cur(askhatRepaid)}</div>
+          {askhatDebt > 0
+            ? <button className="btn btn-sm" style={{ background: "var(--pink)", marginTop: 8 }} onClick={() => setRepayCreditor("husband")}>Погасить</button>
+            : <span style={{ color: "var(--green)", fontWeight: 800, fontSize: 13, display: "block", marginTop: 8 }}>✓ Погашен</span>}
+        </div>
+        <div className="balance-card azamat">
+          <div className="balance-icon">🤝</div>
+          <div className="balance-label">Кредит Азамат</div>
+          <div className="balance-value" style={{ color: "var(--purple)" }}>{cur(azamatDebt)}</div>
+          <div className="balance-sub">Взято: {cur(azamatBorrowed)} · Возвращено: {cur(azamatRepaid)}</div>
+          {azamatDebt > 0
+            ? <button className="btn btn-sm" style={{ background: "var(--purple)", marginTop: 8 }} onClick={() => setRepayCreditor("azamat")}>Погасить</button>
+            : <span style={{ color: "var(--green)", fontWeight: 800, fontSize: 13, display: "block", marginTop: 8 }}>✓ Погашен</span>}
         </div>
       </div>
 
@@ -151,11 +170,11 @@ function getRange() {
         </div>
       </div>
 
-      <div className="cat-label">🤝 Кредит мужа — история</div>
+      <div className="cat-label">🤝 История кредитов</div>
       {credits.length === 0 && <p className="empty-msg">Нет операций</p>}
       {credits.map(c => c._t === "borrow" ? (
         <div key={"b" + c.id} className="credit-row">
-          <div>📥 {c.ingredient}</div>
+          <div>📥 {c.ingredient} <span style={{ opacity: .7, fontWeight: 600 }}>· {SOURCE_LABEL[c.source]}</span></div>
           <div className="pr-right">
             <span style={{ color: "var(--pink)" }}>+{cur(c.total_price)}</span>
             <span className="pr-date">{fmt(c.purchased_at)}</span>
@@ -163,7 +182,7 @@ function getRange() {
         </div>
       ) : (
         <div key={"r" + c.id} className="credit-row paid">
-          <div>✓ Возвращено {SOURCE_LABEL[c.source]}</div>
+          <div>✓ {SOURCE_LABEL[c.creditor]}: возврат ({SOURCE_LABEL[c.source]})</div>
           <div className="pr-right">
             <span style={{ color: "var(--green)" }}>−{cur(c.amount)}</span>
             <span className="pr-date">{fmt(c.repaid_at)}</span>
@@ -202,7 +221,16 @@ function getRange() {
       ))}
 
       {showWithdraw && <WithdrawModal madina={madina} moldir={moldir} card={card} onClose={() => setShowWithdraw(false)} onSaved={() => { setShowWithdraw(false); refresh(); }} />}
-      {showRepay && <RepayModal debt={hDebt} madina={madina} moldir={moldir} card={card} onClose={() => setShowRepay(false)} onSaved={() => { setShowRepay(false); refresh(); }} />}
+      {repayCreditor && (
+        <RepayModal
+          creditor={repayCreditor}
+          creditorLabel={repayCreditor === "azamat" ? "Азамат" : "Асхат"}
+          debt={repayCreditor === "azamat" ? azamatDebt : askhatDebt}
+          madina={madina} moldir={moldir} card={card}
+          onClose={() => setRepayCreditor(null)}
+          onSaved={() => { setRepayCreditor(null); refresh(); }}
+        />
+      )}
     </div>
   );
 }
@@ -248,26 +276,29 @@ function WithdrawModal({ madina, moldir, card, onClose, onSaved }) {
   );
 }
 
-function RepayModal({ debt, madina, moldir, card, onClose, onSaved }) {
+// creditor: "husband" (Асхат) | "azamat" (Азамат)
+function RepayModal({ debt, madina, moldir, card, creditor, creditorLabel, onClose, onSaved }) {
   const [amount, setAmount] = useState(debt);
   const [source, setSource] = useState("madina");
   const [saving, setSaving] = useState(false);
   const balances = { madina, moldir, card };
+  const accent = creditor === "azamat" ? "var(--purple)" : "var(--pink)";
+  const accentBg = creditor === "azamat" ? "var(--purple-bg)" : "var(--pink-bg)";
 
   async function save() {
     if (!Number(amount)) return alert("Введите сумму");
     const bal = balances[source] || 0;
     if (Number(amount) > bal && !confirm(`На счёте только ${cur(bal)}. Продолжить?`)) return;
     setSaving(true);
-    await db.addRepayment({ amount: Number(amount), source });
+    await db.addRepayment({ amount: Number(amount), source, creditor });
     setSaving(false);
     onSaved();
   }
 
   return (
-    <Modal title="Погасить кредит мужа" onClose={onClose}>
-      <div style={{ background: "var(--pink-bg)", borderRadius: 12, padding: 12, marginBottom: 14, color: "var(--pink)", fontWeight: 700 }}>
-        🤝 Долг мужу: <strong>{cur(debt)}</strong>
+    <Modal title={`Погасить кредит ${creditorLabel}`} onClose={onClose}>
+      <div style={{ background: accentBg, borderRadius: 12, padding: 12, marginBottom: 14, color: accent, fontWeight: 700 }}>
+        🤝 Долг {creditorLabel}: <strong>{cur(debt)}</strong>
       </div>
       <div className="fg"><label>Сумма (QAR)</label><input type="number" value={amount} onChange={e => setAmount(e.target.value)} /></div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 14 }}>
