@@ -166,7 +166,10 @@ body{font-family:var(--font);color:var(--text);-webkit-font-smoothing:antialiase
 .balance-action{position:absolute;top:12px;right:12px}
 
 /* Кредиты — Асхат / Азамат в два столбца */
-.credit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.credit-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-bottom:16px;align-items:stretch}
+.credit-grid .balance-card{padding:12px;min-width:0}
+.credit-grid .balance-value{font-size:19px;overflow-wrap:break-word}
+.credit-grid .balance-sub{font-size:10.5px;line-height:1.4}
 
 .fin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
 .fin-card{border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
