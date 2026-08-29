@@ -1,6 +1,8 @@
 -- ============================================================
 -- Домашняя кухня CRM v3 — Supabase Schema
 -- Запустить в: Supabase → SQL Editor → New query → Run
+-- (Для уже существующего проекта используйте
+--  migration_add_creditor.sql вместо повторного запуска этого файла)
 -- ============================================================
 
 -- Clients
@@ -49,7 +51,7 @@ create table if not exists payments (
   id uuid primary key default gen_random_uuid(),
   order_id uuid references orders(id) on delete cascade,
   amount numeric not null,
-  method text not null,                        -- cash|card
+  method text not null,                        -- madina|moldir|card (cash = старое имя)
   paid_at date default current_date,
   created_at timestamptz default now()
 );
@@ -62,7 +64,7 @@ create table if not exists purchases (
   qty numeric not null,
   unit text default 'кг',
   total_price numeric default 0,
-  source text,                                 -- cash|card|husband (NULL для use)
+  source text,                                 -- madina|moldir|card|husband(Асхат)|azamat(Азамат) — NULL для use
   purchased_at date default current_date,
   created_at timestamptz default now()
 );
@@ -71,19 +73,28 @@ create table if not exists purchases (
 create table if not exists withdrawals (
   id uuid primary key default gen_random_uuid(),
   amount numeric not null,
-  source text not null,                        -- cash|card
+  source text not null,                        -- madina|moldir|card
   note text,
   withdrawn_at date default current_date,
   created_at timestamptz default now()
 );
 
--- Husband credit repayments (погашение кредита мужа)
+-- Husband/Azamat credit repayments (погашение кредитов Асхат / Азамат)
 create table if not exists repayments (
   id uuid primary key default gen_random_uuid(),
   amount numeric not null,
-  source text not null,                        -- cash|card (откуда возвращаем)
+  source text not null,                        -- madina|moldir|card (откуда возвращаем)
+  creditor text not null default 'husband',    -- husband(Асхат) | azamat(Азамат) — кому возвращаем
   note text,
   repaid_at date default current_date,
+  created_at timestamptz default now()
+);
+
+-- Ingredients (справочник ингредиентов)
+create table if not exists ingredients (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  unit text default 'кг',
   created_at timestamptz default now()
 );
 
@@ -94,6 +105,7 @@ create index if not exists idx_payments_order on payments(order_id);
 create index if not exists idx_payments_date on payments(paid_at);
 create index if not exists idx_purchases_date on purchases(purchased_at);
 create index if not exists idx_order_items_order on order_items(order_id);
+create index if not exists idx_repayments_creditor on repayments(creditor);
 
 -- ── RLS (Row Level Security) ──
 alter table clients enable row level security;
@@ -104,6 +116,7 @@ alter table payments enable row level security;
 alter table purchases enable row level security;
 alter table withdrawals enable row level security;
 alter table repayments enable row level security;
+alter table ingredients enable row level security;
 
 -- Для домашнего использования (один пользователь): разрешить всё
 create policy "allow_all_clients"     on clients     for all using (true) with check (true);
@@ -114,6 +127,7 @@ create policy "allow_all_payments"    on payments    for all using (true) with c
 create policy "allow_all_purchases"   on purchases   for all using (true) with check (true);
 create policy "allow_all_withdrawals" on withdrawals for all using (true) with check (true);
 create policy "allow_all_repayments"  on repayments  for all using (true) with check (true);
+create policy "allow_all_ingredients" on ingredients for all using (true) with check (true);
 
 -- ── SEED DATA (тестовые данные, можно удалить позже) ──
 insert into clients (name, phone, note) values
