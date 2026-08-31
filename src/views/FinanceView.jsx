@@ -171,7 +171,20 @@ function getRange() {
         </div>
       </div>
 
-      <div className="cat-label">🤝 История кредитов</div>
+      <div className="cat-label" style={{ marginTop: 16 }}>📉 Долги клиентов</div>
+      {clientDebts.length === 0 && <p className="empty-msg">Долгов нет 🎉</p>}
+      {clientDebts.map(o => {
+        const cl = data.clients.find(c => c.id === o.client_id);
+        return (
+          <div key={o.id} className="debt-row">
+            <span>{cl?.name || "—"}</span>
+            <span>{fmt(o.delivery_date)}</span>
+            <span>{cur(orderDebt(o, data.menu, data.payments))}</span>
+          </div>
+        );
+      })}
+
+      <div className="cat-label" style={{ marginTop: 16 }}>🤝 История кредитов</div>
       {credits.length === 0 && <p className="empty-msg">Нет операций</p>}
       {credits.map(c => c._t === "borrow" ? (
         <div key={"b" + c.id} className="credit-row">
@@ -191,19 +204,6 @@ function getRange() {
           </div>
         </div>
       ))}
-
-      <div className="cat-label" style={{ marginTop: 16 }}>📉 Долги клиентов</div>
-      {clientDebts.length === 0 && <p className="empty-msg">Долгов нет 🎉</p>}
-      {clientDebts.map(o => {
-        const cl = data.clients.find(c => c.id === o.client_id);
-        return (
-          <div key={o.id} className="debt-row">
-            <span>{cl?.name || "—"}</span>
-            <span>{fmt(o.delivery_date)}</span>
-            <span>{cur(orderDebt(o, data.menu, data.payments))}</span>
-          </div>
-        );
-      })}
 
       <div className="cat-label" style={{ marginTop: 16 }}>💸 Выводы средств</div>
       {periodWithdraws.length === 0 && <p className="empty-msg">Выводов нет</p>}
