@@ -96,7 +96,7 @@ export default function CalendarView({ data, refresh }) {
               const m = data.menu.find(mi => mi.id === i.menu_item_id);
               if (!m) return;
               const key = m.id;
-              if (!agg[key]) agg[key] = { name: m.name, unit: m.unit, qty: 0 };
+              if (!agg[key]) agg[key] = { id: m.id, name: m.name, unit: m.unit, qty: 0 };
               agg[key].qty += Number(i.qty);
             });
           });
@@ -107,7 +107,7 @@ export default function CalendarView({ data, refresh }) {
               <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text2)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>📋 Объём на день</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {entries.map(e => (
-                  <span key={e.name} style={{ background: "var(--accent-light)", color: "var(--accent)", borderRadius: 20, padding: "4px 10px", fontSize: 13, fontWeight: 700 }}>
+                  <span key={e.id} style={{ background: "var(--accent-light)", color: "var(--accent)", borderRadius: 20, padding: "4px 10px", fontSize: 13, fontWeight: 700 }}>
                     {e.name} × {e.qty % 1 === 0 ? e.qty : e.qty.toFixed(1)}{e.unit && e.unit !== "шт" ? ` ${e.unit}` : ""}
                   </span>
                 ))}
