@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { todayStr } from "./helpers";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -96,7 +97,7 @@ export const addPayment = (p) =>
     order_id: p.order_id,
     amount: p.amount,
     method: p.method,
-    paid_at: p.paid_at || new Date().toISOString().slice(0, 10),
+    paid_at: p.paid_at || todayStr(),
   });
 export const deletePayment = (id) => supabase.from("payments").delete().eq("id", id);
 
@@ -109,7 +110,7 @@ export const addPurchase = (p) =>
     unit: p.unit,
     total_price: p.total_price || 0,
     source: p.source || null,
-    purchased_at: p.purchased_at || new Date().toISOString().slice(0, 10),
+    purchased_at: p.purchased_at || todayStr(),
   });
 export const deletePurchase = (id) => supabase.from("purchases").delete().eq("id", id);
 
@@ -119,7 +120,7 @@ export const addWithdrawal = (w) =>
     amount: w.amount,
     source: w.source,
     note: w.note,
-    withdrawn_at: w.withdrawn_at || new Date().toISOString().slice(0, 10),
+    withdrawn_at: w.withdrawn_at || todayStr(),
   });
 export const deleteWithdrawal = (id) => supabase.from("withdrawals").delete().eq("id", id);
 
@@ -131,6 +132,6 @@ export const addRepayment = (r) =>
     source: r.source,
     creditor: r.creditor || "husband",
     note: r.note,
-    repaid_at: r.repaid_at || new Date().toISOString().slice(0, 10),
+    repaid_at: r.repaid_at || todayStr(),
   });
 export const deleteRepayment = (id) => supabase.from("repayments").delete().eq("id", id);

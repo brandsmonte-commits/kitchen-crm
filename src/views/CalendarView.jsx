@@ -1,14 +1,14 @@
 import { useState } from "react";
 import Modal, { TrashIcon, EditIcon, TransferIcon, CloseIcon } from "../components/Modal";
 import {
-  cur, fmt, fmtFull, todayStr, STATUS, SOURCE_LABEL,
+  cur, fmt, fmtFull, todayStr, addDays, STATUS, SOURCE_LABEL,
   orderSubtotal, orderDiscount, orderTotal, orderPaymentsTotal, orderDebt, paymentState,
 } from "../helpers";
 import * as db from "../db";
 import { supabase } from "../db";
 
 export default function CalendarView({ data, refresh }) {
-  const [calDate, setCalDate] = useState(new Date());
+  const [calDate, setCalDate] = useState(() => new Date(todayStr() + "T12:00"));
   const [selectedDate, setSelectedDate] = useState(todayStr());
   const [orderModal, setOrderModal] = useState(null); // null | {} | order
   const [transferOrder, setTransferOrder] = useState(null);
@@ -420,9 +420,7 @@ function TransferModal({ order, onClose, onSaved }) {
   const [saving, setSaving] = useState(false);
 
   function shift(days) {
-    const d = new Date(date + "T12:00");
-    d.setDate(d.getDate() + days);
-    setDate(d.toISOString().slice(0, 10));
+    setDate(addDays(date, days));
   }
 
   async function save() {

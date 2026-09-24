@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Modal, { TrashIcon } from "../components/Modal";
 import {
-  cur, fmt, todayStr, SOURCE_LABEL, accountBalance, accountRemainingIncome, orderTotal, orderDebt,
+  cur, fmt, fmtTime, periodRange, SOURCE_LABEL, accountBalance, accountRemainingIncome, orderTotal, orderDebt,
   creditorDebt, creditorBorrowed, creditorRepaid,
 } from "../helpers";
 import * as db from "../db";
@@ -27,28 +27,7 @@ export default function FinanceView({ data, refresh }) {
   const azamatBorrowed = creditorBorrowed(data, "azamat");
   const azamatRepaid = creditorRepaid(data, "azamat");
 
-function getRange() {
-  const now = new Date();
-  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const monthEnd = `${now.toISOString().slice(0, 8)}${lastDayOfMonth}`;
-
-  if (period === "today") return { from: todayStr(), to: todayStr() };
-  if (period === "week") {
-  const day = now.getDay(); // 0=вс, 1=пн...
-  const diffToMon = (day === 0 ? -6 : 1 - day);
-  const mon = new Date(now); mon.setDate(now.getDate() + diffToMon);
-  const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
-  return {
-    from: mon.toISOString().slice(0, 10),
-    to: sun.toISOString().slice(0, 10)
-  };
-}
-  if (period === "month") return { from: now.toISOString().slice(0, 8) + "01", to: monthEnd };
-  if (period === "custom") return { from: fromDate || "2000-01-01", to: toDate || todayStr() };
-  return { from: "2000-01-01", to: "2099-12-31" };
-}
-
-  const { from, to } = getRange();
+  const { from, to } = periodRange(period, fromDate, toDate);
   const ordersInPeriod = data.orders.filter(o => o.delivery_date >= from && o.delivery_date <= to && o.status !== "cancelled");
   const revenue = ordersInPeriod.reduce((s, o) => s + orderTotal(o, data.menu), 0);
 
@@ -251,8 +230,8 @@ function IncomeModal({ account, label, balance, entries, onClose }) {
       <div style={{ background: "var(--surface2)", borderRadius: 12, padding: 12, marginBottom: 14, fontWeight: 700 }}>
         Текущий остаток: <strong>{cur(balance)}</strong>
         <div style={{ fontWeight: 600, fontSize: 12, color: "var(--text2)", marginTop: 4 }}>
-          Показаны только самые свежие оплаты клиентов, из которых он состоит — уже выведенные
-          и потраченные деньги (со старых оплат) в список не входят
+          Показаны только самые свежие оплаты клиентов (по дате получения денег), из которых
+          он состоит — уже выведенные и потраченные деньги (со старых оплат) в список не входят
         </div>
       </div>
       {entries.length === 0 && <p className="empty-msg">Поступлений нет</p>}
@@ -261,8 +240,11 @@ function IncomeModal({ account, label, balance, entries, onClose }) {
           <div>
             <strong>{e.clientName}</strong>
             <span style={{ color: "var(--text2)" }}> · {cur(e.amount)}</span>
+            {e.orderDate && e.orderDate !== e.paidAt && (
+              <div style={{ fontSize: 11, color: "var(--text2)", fontWeight: 600 }}>за заказ от {fmt(e.orderDate)}</div>
+            )}
           </div>
-          <span className="pr-date">{fmt(e.orderDate)}</span>
+          <span className="pr-date">{fmt(e.paidAt)} {fmtTime(e.createdAt)}</span>
         </div>
       ))}
       <div className="modal-acts">
