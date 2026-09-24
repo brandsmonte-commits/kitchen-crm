@@ -5,6 +5,7 @@ import ClientsView from "./views/ClientsView";
 import MenuView from "./views/MenuView";
 import WarehouseView from "./views/WarehouseView";
 import FinanceView from "./views/FinanceView";
+import CashflowView from "./views/CashflowView";
 
 export default function App() {
   const [tab, setTab] = useState("calendar");
@@ -35,6 +36,7 @@ export default function App() {
     { id: "menu", label: "Меню", icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg> },
     { id: "warehouse", label: "Склад", icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 8.35V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.35A2 2 0 0 1 3.26 6.5l8-3.2a2 2 0 0 1 1.48 0l8 3.2A2 2 0 0 1 22 8.35Z"/><path d="M6 18h12"/><path d="M6 14h12"/><rect width="8" height="6" x="8" y="18" rx="1"/></svg> },
     { id: "finance", label: "Финансы", icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> },
+    { id: "cashflow", label: "Приходы", icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-6"/></svg> },
   ];
 
   return (
@@ -45,6 +47,7 @@ export default function App() {
         {tab === "menu" && <MenuView data={data} refresh={refresh} />}
         {tab === "warehouse" && <WarehouseView data={data} refresh={refresh} />}
         {tab === "finance" && <FinanceView data={data} refresh={refresh} />}
+        {tab === "cashflow" && <CashflowView data={data} />}
       </div>
       <nav className="bottom-nav">
         {tabs.map((t) => (

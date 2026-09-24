@@ -169,6 +169,26 @@ body{font-family:var(--font);color:var(--text);-webkit-font-smoothing:antialiase
 .credit-grid .balance-value{font-size:19px;overflow-wrap:break-word}
 .credit-grid .balance-sub{font-size:10.5px;line-height:1.4}
 .pr-source.azamat{background:var(--purple-bg);color:var(--purple)}
+/* CASHFLOW (Приходы) */
+.ledger-summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:var(--surface);border-radius:var(--radius);padding:12px;margin-bottom:10px;box-shadow:var(--shadow);border:1.5px solid var(--border)}
+.ledger-summary div{display:flex;flex-direction:column;gap:2px}
+.ledger-summary span{font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px}
+.ledger-summary strong{font-size:16px;font-weight:900}
+.ledger-summary .in,.ledger-amt.in{color:var(--green)}
+.ledger-summary .out,.ledger-amt.out{color:var(--red)}
+.ledger-day{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:12px;font-weight:800;color:var(--text2);margin:14px 0 6px;text-transform:capitalize}
+.ledger-day span:last-child{text-transform:none;white-space:nowrap}
+.ledger-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;background:var(--surface);border-radius:10px;margin-bottom:6px;border:1.5px solid var(--border);font-size:13px}
+.ledger-row.in{border-left:3px solid var(--green)}
+.ledger-row.out{border-left:3px solid var(--red)}
+.ledger-main{min-width:0}
+.ledger-title{font-weight:800;overflow-wrap:anywhere}
+.ledger-meta{font-size:11px;color:var(--text2);font-weight:600;margin-top:2px}
+.ledger-right{text-align:right;flex-shrink:0}
+.ledger-amt{font-weight:900;white-space:nowrap}
+.ledger-bal{font-size:11px;color:var(--text2);font-weight:700;white-space:nowrap}
+.pr-source.madina{background:var(--green-bg);color:var(--green)}
+.pr-source.moldir{background:var(--yellow-bg);color:var(--yellow)}
     </style>
   </head>
   <body>
